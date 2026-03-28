@@ -116,7 +116,7 @@ def optimize_and_plot(ax, points, title):
 
     ax.scatter([x0_opt], [y0_opt], color='black', marker='x', s=100, label='Optimal Point')
 
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     ax.set_aspect("equal")
     ax.legend(loc="lower right")
 
@@ -145,7 +145,7 @@ graph_names = ["Linear", "Quadratic", "Sine", "Random"]
 rand_points = np.random.uniform(-5, 5, (100, 2))
 point_sets.append(rand_points)
 
-fig, axes = plt.subplots(2, 2, figsize=(14, 14))
+fig, axes = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
 axes = axes.ravel()
 
 results = []
@@ -156,8 +156,9 @@ for i, (ax, pts) in enumerate(zip(axes, point_sets)):
     results.append(res)
     last_contour = contour
 
-fig.suptitle("Optimization of Capture Value", fontsize=16)
+fig.suptitle("Optimization of Capture Value", fontsize=20)
 fig.colorbar(contour, ax=axes, shrink=0.8, label='Capture Value')
+plt.savefig("optimization_results.png")
 plt.show()
 
 for i, res in enumerate(results, 1):
