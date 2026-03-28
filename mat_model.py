@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
+
+np.random.seed(42)
+
 a1 = 10.0
 a2 = 2.0
 k1 = 1.0
@@ -11,14 +14,15 @@ k4 = 50.0
 eps = 1
 n_closest = 1
 
-np.random.seed(42)
-
+# Sigmoid function
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+# Softplus function
 def softplus(x):
     return np.log1p(np.exp(x))
 
+# Projections of points onto the main and perpendicular axes
 def compute_projections(x0, y0, phi, pts):
     u_vec = np.array([np.cos(phi), np.sin(phi)])
     n_vec = np.array([-np.sin(phi), np.cos(phi)])
@@ -27,19 +31,23 @@ def compute_projections(x0, y0, phi, pts):
     n = diff @ n_vec
     return u, n
 
+# Capture function by parallel projection
 def g_parallel(u):
     return sigmoid(k1 * u) * sigmoid(k1 * (a1 - u))
 
+# Capture function by perpendicular projection
 def g_perp(n):
     return sigmoid(k2 * (n + a2)) * sigmoid(k2 * (a2 - n))
 
-# ===== генерация точек по функции =====
+# Points generation by functions
 def generate_points(func, x_range=(-5, 5), n=100):
     x = np.linspace(x_range[0], x_range[1], n)
     y = func(x)
     return np.stack([x, y], axis=1)
 
+# Optimize function and plot results
 def optimize_and_plot(ax, points, title):
+    # Objective function for optimization
     def objective(vars):
         x0, y0, phi = vars
         phi = phi % (2 * np.pi)
@@ -53,6 +61,7 @@ def optimize_and_plot(ax, points, title):
 
         return -(term1 - k4 * penalty)
 
+    # Start point for optimization
     init = np.array([0.0, 0.0, 0.0])
     res = minimize(
         objective,
@@ -63,10 +72,8 @@ def optimize_and_plot(ax, points, title):
 
     x0_opt, y0_opt, phi_opt = res.x
 
-    # ===== точки =====
     ax.scatter(points[:, 0], points[:, 1], label="Points")
 
-    # ===== линии =====
     u_vec = np.array([np.cos(phi_opt), np.sin(phi_opt)])
     origin = np.array([x0_opt, y0_opt])
 
@@ -77,18 +84,17 @@ def optimize_and_plot(ax, points, title):
     ax.plot(*(main_line + a2 * n_vec).T, linestyle="--", color="green")
     ax.plot(*(main_line - a2 * n_vec).T, linestyle="--", color="green")
 
-    # ===== contour (градиент) =====
     x_grid = np.linspace(-10, 10, 200)
     y_grid = np.linspace(-10, 10, 200)
     X, Y = np.meshgrid(x_grid, y_grid)
     grid_points = np.stack([X.ravel(), Y.ravel()], axis=1)
 
+    # Compute probabilities on the grid
     u, n = compute_projections(x0_opt, y0_opt, phi_opt, grid_points)
     Z = (g_parallel(u) * g_perp(n)).reshape(X.shape)
 
     contour = ax.contourf(X, Y, Z, levels=50, alpha=0.3, cmap="viridis")
 
-    # ===== ближайшая точка =====
     distances = np.sqrt((points[:, 0] - x0_opt) ** 2 + (points[:, 1] - y0_opt) ** 2)
     idx = np.argsort(distances)[:n_closest]
 
@@ -108,7 +114,6 @@ def optimize_and_plot(ax, points, title):
                 fontsize=9,
                 bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
 
-    # ===== стартовая точка =====
     ax.scatter([x0_opt], [y0_opt], color='black', marker='x', s=100, label='Optimal Point')
 
     ax.set_title(title)
@@ -117,7 +122,7 @@ def optimize_and_plot(ax, points, title):
 
     return res, contour
 
-# ===== функции =====
+
 functions = [
     lambda x: x,
     lambda x: x**2,
@@ -140,7 +145,6 @@ graph_names = ["Linear", "Quadratic", "Sine", "Random"]
 rand_points = np.random.uniform(-5, 5, (100, 2))
 point_sets.append(rand_points)
 
-# ===== plot =====
 fig, axes = plt.subplots(2, 2, figsize=(14, 14))
 axes = axes.ravel()
 
@@ -156,7 +160,6 @@ fig.suptitle("Optimization of Capture Value", fontsize=16)
 fig.colorbar(contour, ax=axes, shrink=0.8, label='Capture Value')
 plt.show()
 
-# ===== вывод результатов =====
 for i, res in enumerate(results, 1):
     x0, y0, phi = res.x
     print(f"\nGraph {i}")
