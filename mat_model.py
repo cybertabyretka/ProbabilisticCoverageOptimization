@@ -85,6 +85,21 @@ def optimize_and_plot(ax, points, title):
     ax.plot(*(main_line + a2 * n_vec).T, linestyle="--", color="green")
     ax.plot(*(main_line - a2 * n_vec).T, linestyle="--", color="green")
 
+    start = origin
+    end = origin + a1 * u_vec
+
+    start_line = np.array([
+        start - a2 * n_vec,
+        start + a2 * n_vec
+    ])
+    ax.plot(start_line[:, 0], start_line[:, 1], linestyle="--", color="green")
+
+    end_line = np.array([
+        end - a2 * n_vec,
+        end + a2 * n_vec
+    ])
+    ax.plot(end_line[:, 0], end_line[:, 1], linestyle="--", color="green")
+
     x_grid = np.linspace(-10, 10, 200)
     y_grid = np.linspace(-10, 10, 200)
     X, Y = np.meshgrid(x_grid, y_grid)
