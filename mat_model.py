@@ -12,6 +12,7 @@ k2 = 2.0
 k3 = 50.0
 k4 = 50.0
 eps = 1
+delta = 1e-3
 n_closest = 1
 
 # Sigmoid function
@@ -56,7 +57,7 @@ def optimize_and_plot(ax, points, title):
         capture = g_parallel(u) * g_perp(n)
         term1 = np.sum(capture)
 
-        dists = np.sqrt((points[:, 0] - x0) ** 2 + (points[:, 1] - y0) ** 2)
+        dists = np.sqrt((points[:, 0] - x0) ** 2 + (points[:, 1] - y0) ** 2 + delta**2)
         penalty = np.sum(softplus(k3 * (eps - dists)))
 
         return -(term1 - k4 * penalty)
