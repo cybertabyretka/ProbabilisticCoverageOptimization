@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-np.random.seed(42)
-points = np.random.randn(30, 2)
+points = np.linspace(-4, 4, 30)
+points = np.stack((points, points), axis=1)
 
 a1, a2 = 10.0, 2.0
 k1, k2 = 1.0, 2.0
@@ -59,39 +59,52 @@ def compute(x0, y0, phi):
 
     return total, grad_x, grad_y, grad_phi
 
-
-phi = 0.5
 X, Y = np.meshgrid(np.linspace(-10, 10, 30),
                    np.linspace(-10, 10, 30))
+
 U = np.zeros_like(X)
 V = np.zeros_like(Y)
 Z = np.zeros_like(X)
 
+phis = np.linspace(0, 2*np.pi, 360)
+
 for i in range(X.shape[0]):
     for j in range(X.shape[1]):
-        val, gx, gy, _ = compute(X[i,j], Y[i,j], phi)
-        U[i,j] = gx
-        V[i,j] = gy
-        Z[i,j] = val
+        val_sum = 0
+        gx_sum = 0
+        gy_sum = 0
+        for phi in phis:
+            val, gx, gy, _ = compute(X[i,j], Y[i,j], phi)
+            val_sum += val
+            gx_sum += gx
+            gy_sum += gy
+        Z[i,j] = val_sum / len(phis)
+        U[i,j] = gx_sum / len(phis)
+        V[i,j] = gy_sum / len(phis)
 
 fig = plt.figure(figsize=(18, 6))
 
 ax1 = fig.add_subplot(1, 3, 1)
+magnitude = np.sqrt(U**2 + V**2)
+U_norm = U / (magnitude + 1e-6)
+V_norm = V / (magnitude + 1e-6)
+
+ax1.quiver(X, Y, U_norm, V_norm)
 ax1.quiver(X, Y, U, V)
-ax1.scatter(points[:,0], points[:,1])
-ax1.set_title("Gradient field", fontsize=16)
+ax1.scatter(points[:,0], points[:,1], color='red')
+ax1.set_title("Average Gradient field", fontsize=16)
 
 ax2 = fig.add_subplot(1, 3, 2)
-contour = ax2.contourf(X, Y, Z, levels=50)
+contour = ax2.contourf(X, Y, Z, levels=150)
 fig.colorbar(contour, ax=ax2)
-ax2.scatter(points[:,0], points[:,1])
-ax2.set_title("Objective function", fontsize=16)
+ax2.scatter(points[:,0], points[:,1], color='red')
+ax2.set_title("Average Objective function", fontsize=16)
 
 ax3 = fig.add_subplot(1, 3, 3, projection='3d')
-ax3.plot_surface(X, Y, Z)
+ax3.plot_surface(X, Y, Z, cmap='viridis', vmin=-50, vmax=np.max(Z))
 ax3.set_title("3D surface", fontsize=16)
 
-plt.suptitle("Visualization of the objective function and its gradient", fontsize=20)
+plt.suptitle("Visualization of the objective function and its gradient (linear points, averaged over 360 angles)", fontsize=18)
 plt.tight_layout()
 plt.savefig("gradient_visualization.png")
 plt.show()

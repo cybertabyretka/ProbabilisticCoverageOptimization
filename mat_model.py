@@ -105,7 +105,7 @@ def optimize_and_plot(ax, points, title):
     X, Y = np.meshgrid(x_grid, y_grid)
     grid_points = np.stack([X.ravel(), Y.ravel()], axis=1)
 
-    # Compute probabilities on the grid
+    # Compute capture values on the grid
     u, n = compute_projections(x0_opt, y0_opt, phi_opt, grid_points)
     Z = (g_parallel(u) * g_perp(n)).reshape(X.shape)
 
@@ -139,46 +139,47 @@ def optimize_and_plot(ax, points, title):
     return res, contour
 
 
-functions = [
-    lambda x: x,
-    lambda x: x**2,
-    lambda x: np.sin(x)
-]
+if __name__ == "__main__":
+    functions = [
+        lambda x: x,
+        lambda x: x**2,
+        lambda x: np.sin(x)
+    ]
 
-ranges = [
-    (-5, 5),
-    (-3, 3),
-    (-5, 5)
-]
+    ranges = [
+        (-5, 5),
+        (-3, 3),
+        (-5, 5)
+    ]
 
-point_sets = [
-    generate_points(f, r, 100)
-    for f, r in zip(functions, ranges)
-]
+    point_sets = [
+        generate_points(f, r, 100)
+        for f, r in zip(functions, ranges)
+    ]
 
-graph_names = ["Linear", "Quadratic", "Sine", "Random"]
+    graph_names = ["Linear", "Quadratic", "Sine", "Random"]
 
-rand_points = np.random.uniform(-5, 5, (100, 2))
-point_sets.append(rand_points)
+    rand_points = np.random.uniform(-5, 5, (100, 2))
+    point_sets.append(rand_points)
 
-fig, axes = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
-axes = axes.ravel()
+    fig, axes = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
+    axes = axes.ravel()
 
-results = []
-last_contour = None
+    results = []
+    last_contour = None
 
-for i, (ax, pts) in enumerate(zip(axes, point_sets)):
-    res, contour = optimize_and_plot(ax, pts, graph_names[i])
-    results.append(res)
-    last_contour = contour
+    for i, (ax, pts) in enumerate(zip(axes, point_sets)):
+        res, contour = optimize_and_plot(ax, pts, graph_names[i])
+        results.append(res)
+        last_contour = contour
 
-fig.suptitle("Optimization of Capture Value", fontsize=20)
-fig.colorbar(contour, ax=axes, shrink=0.8, label='Capture Value')
-plt.savefig("optimization_results.png")
-plt.show()
+    fig.suptitle("Optimization of Capture Value", fontsize=20)
+    fig.colorbar(contour, ax=axes, shrink=0.8, label='Capture Value')
+    plt.savefig("optimization_results.png")
+    plt.show()
 
-for i, res in enumerate(results, 1):
-    x0, y0, phi = res.x
-    print(f"\nGraph {i}")
-    print("Optimal:", x0, y0, phi)
-    print("Objective:", -res.fun)
+    for i, res in enumerate(results, 1):
+        x0, y0, phi = res.x
+        print(f"\nGraph {i}")
+        print("Optimal:", x0, y0, phi)
+        print("Objective:", -res.fun)
