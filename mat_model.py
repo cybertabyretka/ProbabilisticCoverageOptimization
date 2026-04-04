@@ -7,13 +7,23 @@ np.random.seed(42)
 
 a1 = 10.0
 a2 = 2.0
-k1 = 1.0
-k2 = 2.0
-k3 = 50.0
-k4 = 50.0
 eps = 1
 delta = 1e-3
 n_closest = 1
+
+k_params = [
+    (1.0, 1.0, 1.0, 1.0),
+    (1.0, 2.0, 50.0, 50.0),
+    (1.0, 2.0, 50.0, 50.0),
+    (1.0, 2.0, 50.0, 50.0)
+]
+
+p_params = [
+    (1.0, 2.0),
+    (1.0, 1.0),
+    (1.0, 1.0),
+    (1.0, 1.0)
+]
 
 # Sigmoid function
 def sigmoid(x):
@@ -33,11 +43,11 @@ def compute_projections(x0, y0, phi, pts):
     return u, n
 
 # Capture function by parallel projection
-def g_parallel(u):
+def g_parallel(u, k1):
     return sigmoid(k1 * u) * sigmoid(k1 * (a1 - u))
 
 # Capture function by perpendicular projection
-def g_perp(n):
+def g_perp(n, k2):
     return sigmoid(k2 * (n + a2)) * sigmoid(k2 * (a2 - n))
 
 # Points generation by functions
@@ -47,14 +57,16 @@ def generate_points(func, x_range=(-5, 5), n=100):
     return np.stack([x, y], axis=1)
 
 # Optimize function and plot results
-def optimize_and_plot(ax, points, title):
+def optimize_and_plot(ax, points, title, k_set, p_set):
+    k1, k2, k3, k4 = k_set
+    p1, p2 = p_set
     # Objective function for optimization
     def objective(vars):
         x0, y0, phi = vars
         phi = phi % (2 * np.pi)
 
         u, n = compute_projections(x0, y0, phi, points)
-        capture = g_parallel(u) * g_perp(n)
+        capture = (g_parallel(u, k1)**p1) * (g_perp(n, k2)**p2)
         term1 = np.sum(capture)
 
         dists = np.sqrt((points[:, 0] - x0) ** 2 + (points[:, 1] - y0) ** 2 + delta**2)
@@ -107,7 +119,7 @@ def optimize_and_plot(ax, points, title):
 
     # Compute capture values on the grid
     u, n = compute_projections(x0_opt, y0_opt, phi_opt, grid_points)
-    Z = (g_parallel(u) * g_perp(n)).reshape(X.shape)
+    Z = ((g_parallel(u, k1)**p1) * (g_perp(n, k2)**p2)).reshape(X.shape)
 
     contour = ax.contourf(X, Y, Z, levels=50, alpha=0.3, cmap="viridis")
 
@@ -169,7 +181,7 @@ if __name__ == "__main__":
     last_contour = None
 
     for i, (ax, pts) in enumerate(zip(axes, point_sets)):
-        res, contour = optimize_and_plot(ax, pts, graph_names[i])
+        res, contour = optimize_and_plot(ax, pts, graph_names[i], k_params[i], p_params[i])
         results.append(res)
         last_contour = contour
 

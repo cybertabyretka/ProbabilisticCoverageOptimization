@@ -2,12 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-points = np.linspace(-4, 4, 30)
-points = np.stack((points, points), axis=1)
+def generate_points(func, x_range=(-3, 3), n=30):
+    x = np.linspace(x_range[0], x_range[1], n)
+    y = func(x)
+    return np.stack((x, y), axis=1)
+
+points = generate_points(lambda x: x)
 
 a1, a2 = 10.0, 2.0
-k1, k2 = 1.0, 2.0
-k3, k4 = 1.0, 10.0
+k1, k2, k3, k4 = 1.0, 1.0, 1.0, 1.0
+p1, p2 = 4.0, 4.0
 eps = 1.0
 delta = 1e-3
 
@@ -43,11 +47,25 @@ def compute(x0, y0, phi):
         g_par_p = k1 * g_par * (B - A)
         g_perp_p = k2 * g_perp * (D - C)
 
-        total += g_par * g_perp
+        g_par_pow = g_par**p1
+        g_perp_pow = g_perp**p2
 
-        grad_x += -cos * g_par_p * g_perp + sin * g_par * g_perp_p
-        grad_y += -sin * g_par_p * g_perp - cos * g_par * g_perp_p
-        grad_phi += n * g_par_p * g_perp - u * g_par * g_perp_p
+        total += g_par_pow * g_perp_pow
+
+        grad_x += (
+            -p1 * cos * g_par_p * (g_par**(p1 - 1)) * g_perp_pow
+            + p2 * sin * g_perp_p * g_par_pow * (g_perp**(p2 - 1))
+        )
+
+        grad_y += (
+            -p1 * sin * g_par_p * (g_par**(p1 - 1)) * g_perp_pow
+            - p2 * cos * g_perp_p * g_par_pow * (g_perp**(p2 - 1))
+        )
+
+        grad_phi += (
+            p1 * n * g_par_p * (g_par**(p1 - 1)) * g_perp_pow
+            - p2 * u * g_perp_p * g_par_pow * (g_perp**(p2 - 1))
+        )
 
         d = np.sqrt(dx**2 + dy**2 + delta**2)
         sp = sigmoid(k3 * (eps - d))
